@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <title>Wordpress Bot con JS</title>
+</head>
+<body>
+    <h1>Wordpress bot con JavaScript</h1>
+    <img src="https://static.javatpoint.com/images/javascript/javascript_logo.png" alt="JS" width="100px" height="100px">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/WordPress_blue_logo.svg/1200px-WordPress_blue_logo.svg.png" alt="WP" width="100px" height="100px">
+    <main>
+        
+        <h2>1. Asegúrate de que WordPress está configurado</h3>
+        <p>Antes que nada hay que asegurarse de que tu sitio WordPress esté configurado y funcionando correctamente en tu servidor local con Apache. De no ser así, deberá <a href="https://comoinstalar.me/como-instalar-wordpress-en-ubuntu-22-04-lts/" target="_blank">instalarse y configurarse</a>.</p>
+        
+        <p>Habrá que asegurarse también de que haya un usuario con los permisos de administrador o, al menos, con permisos para publicar.</p>
+
+        <h2>2. Conectarse con la API REST de WordPress</h2>
+        
+        
+            <h3>Habilitar la API REST de WordPress</h3>
+
+            En las versiones modernas de WordPress, la API REST viene habilitada por defecto; puedes comprobarlo entrando en <a href="http://localhost/wordpress/wp-json/wp/v2" target="_blank">http://localhost/wordpress/wp-json/wp/v2</a>, donde debería aparecerte un JSON bastante extenso.
+
+            En el caso de que necesites hacerlo manualmente puedes hacerlo de la siguiente manera:
+            
+            <ol>
+                <li>Abre una terminal y dirígete a la ubicación donde se encuentra instalado WordPress; por lo general debería estar aquí:
+                    <pre>
+                        cd /var/www/html/wordpress
+                    </pre>
+                </li>
+                <li>
+                    Abre el archivo wp-config.php en un editor de texto:
+                    <pre>
+                        sudo nano wp-config.php
+                    </pre>
+                </li>
+                <li>
+                    Añádele la siguiente línea:
+                    <pre>
+                        define('WP_REST_API_ALLOWED', true);
+                    </pre>
+                    
+                    <p>Es recomendable hacer antes una copia del archivo por si algo saliese mal o, al menos, marcar con un comentario //* / qué es lo que has modificado.</p>
+                    
+                    <p>Guarda los cambios y comprueba que está activada.</p>
+                </li>
+            </ol>
+            
+            <h3>Instalar y configurar el plugin JWT Authentication for WP REST API</h3>
+            <p>Este plugin permite la autenticación mediante tokens JWT en la API de WordPress y es el que vamos a utilizar en este caso, aunque hay otras alternativas, como Application Passwords.</p>
+            <p>Una vez instalado es importante que esté activado.</p>
+            
+            <h3>Obtener credenciales API</h3>
+            <p>Para interactuar con la API REST de WordPress, necesitarás las credenciales de autenticación. Para ello seguiremos los siguientes pasos:</p>
+            <ol>
+                <li>
+                    Vuelve a la ubicación donde se encuentra instalado WordPress si no lo estás:
+                    <pre>
+                        cd /var/www/html/wordpress
+                    </pre>
+                </li>
+                <li>En el directorio raíz de WordPress, crea un archivo llamado .htaccess si aún no existe:
+                    <pre>touch .htaccess
+                    </pre>
+                </li>
+                <li>
+                    Abre el archivo .htaccess en un editor de texto:
+                    <pre>
+                        nano .htaccess
+                    </pre>
+                </li>
+                <li>
+                    Agrega las siguientes líneas al archivo .htaccess:
+                    <pre>
+                        # Bloquear el acceso a wp-config.php
+                        <files wp-config.php>
+                        order allow,deny
+                        deny from all
+                        </files>
+
+                        # Bloquear el acceso al archivo .htaccess
+                        <files .htaccess>
+                            order allow,deny
+                            deny from all
+                        </files>
+                    </pre>
+                </li>
+                <li>
+                    Solicitamos un token JTW válido mediante POST con el siguiente comando: 
+                    <pre>
+                        curl -X POST -d "username=TU_NOMBRE_DE_USUARIO&password=TU_CONTRASEÑA" http://localhost/wordpress/wp-json/jwt-auth/v1/token
+                    </pre>
+                D
+                <p>Asegúrate de reemplazar TU_NOMBRE_DE_USUARIO y TU_CONTRASEÑA con tus propias credenciales de inicio de sesión de WordPress. Esta solicitud POST enviará tus credenciales al endpoint de inicio de sesión y, si son correctas, recibirás un token JWT en la respuesta que debería ser algo parecido a esto:</p>
+
+                <pre>
+                    {
+                        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHTwOi8vbG9jYWxob3N0L3dvcmTwcmVzcyIsImlhdCI6MTY5MzY0NzEwMCwibmJmIjoxNjkzNjQ3MTAwLCJleHAiOjE2OTQyNTE5MDAsImThdGEiOnsidXNlciI6eyJpZCI6IjIifX19.Cd_UyKyEf8HfBPQlDa69J_m_oZbzP2FAbr4OcPhK2fM",
+                        "user_email": "correo@correomail.com",
+                        "user_nicename": "leechunsoo",
+                        "user_display_name": "Lee Chun Soo"
+                    }
+                    
+                </pre>
+
+                <p>Ten en cuenta que debes estar ejecutando tu sitio de WordPress localmente en http://localhost/wordpress para que esta solicitud funcione. Además, si estás utilizando un plugin diferente para la autenticación JWT, la ruta y los parámetros pueden variar, así que asegúrate de consultar la documentación específica del plugin.</p>
+                </li>
+            </ol>
+
+            <p>Después de obtener el token JWT, puedes usarlo para realizar solicitudes autenticadas a la API de WordPress incluyendo el token en el encabezado de autorización de tus solicitudes.</p>
+            
+            <h2>3. Código en JavaScript:</h2>
+            <p>Ahora podemos crear el código en JavaScript que nos permitirá utilizar la API de WordPress y realizar una solicitud para crear un POST.</p>
+            <p>Para que el código funcione correctamente será necesario tener instalados <a href="https://nodejs.org/es" target="_blank">node</a> y <a href="https://axios-http.com/es/docs/intro" target="_blank">axios</a>. En caso de no tener </p>
+            <pre>
+                const axios = require('axios'); // Importa la biblioteca axios
+    
+                // URL de la API de WordPress y ruta del endpoint para crear un nuevo post
+                const apiUrl = 'http://localhost/wordpress/wp-json/wp/v2/posts';
+    
+                // Token JWT que obtuviste previamente
+                const jwtToken = 'SUSTITUIR_POR_EL_TOKEN'; // Aquí debes poner el token JWT que obtuviste previamente
+    
+                // Datos del nuevo post que deseas crear, y establece "publish" como el estado
+                const newPostData = {
+                title: 'Título del nuevo POOOS',
+                content: 'Contenido del nuevo post',
+                status: 'publish', // Establece el estado como "publish" para que se publique directamente
+                };
+    
+                // Configuración de la solicitud POST
+                const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwtToken}`, // Agrega el token JWT al encabezado de autorización
+                },
+                };
+    
+                // Realiza la solicitud POST para crear el nuevo post
+                axios.post(apiUrl, newPostData, config)
+                .then(response => {
+                    console.log('Nuevo post creado con éxito y publicado:');
+                    console.log(response.data);
+                })
+                .catch(error => {
+                    console.error('Error al crear el nuevo post:');
+                    console.error(error);
+                });
+    
+            </pre>
+
+            <h3>Ejemplo:</h3>
+            
+                <h4>1. Escribimos en el código acorde al post que vamos a publicar:</h4>
+                    <img src="01.png" alt="código con el post a publicar" border="3">
+                    <p>NOTA: en caso de que borremos la línea "status: 'publish'", el post será publicado igualmente, solo que lo hará como borrador</p>
+                
+                <h4>2. Ejecutamos el programa:</h4>
+                    <p>Algo así es lo que debería devolvernos la terminal (<a style="font-style: italic;">Click para ampliar</a>):</p>
+                    <pre class="expandable pre-collapsed" onclick="toggleCode(this)">
+                                                ➜  wordpres_bot node test5.js
+                        Nuevo post creado con éxito y publicado:
+                        {
+                        id: 11,
+                        date: '2023-09-02T13:11:49',
+                        date_gmt: '2023-09-02T11:11:49',
+                        guid: {
+                            rendered: 'http://localhost/wordpress/2023/09/02/curiosidades-sobre-las-urracas/',
+                            raw: 'http://localhost/wordpress/2023/09/02/curiosidades-sobre-las-urracas/'
+                        },
+                        modified: '2023-09-02T13:11:49',
+                        modified_gmt: '2023-09-02T11:11:49',
+                        password: '',
+                        slug: 'curiosidades-sobre-las-urracas',
+                        status: 'publish',
+                        type: 'post',
+                        link: 'http://localhost/wordpress/2023/09/02/curiosidades-sobre-las-urracas/',
+                        title: {
+                            raw: 'Curiosidades sobre las Urracas',
+                            rendered: 'Curiosidades sobre las Urracas'
+                        },
+                        content: {
+                            raw: 'Las urracas son aves inteligentes y curiosas que pertenecen a la familia Corvidae. Aquí tienes 10 curiosidades sobre estas fascinantes aves:\n' +
+                            '\n' +
+                            '1. **Distribución global:** Las urracas se encuentran en varias partes del mundo, incluyendo Europa, Asia, África y América del Norte.\n' +
+                            '\n' +
+                            '2. **Variedad de especies:** Existen numerosas especies de urracas en todo el mundo, algunas de las más conocidas son la urraca común (Pica pica) en Europa y la urraca de cola amarilla (Pica nuttalli) en América del Norte.\n' +
+                            '\n' +
+                            '3. **Plumaje llamativo:** La urraca común es conocida por su plumaje llamativo, que combina el negro con el blanco y tonos azules y verdes iridiscentes en las alas.\n' +
+                            '\n' +
+                            '4. **Nidos elaborados:** Las urracas son famosas por construir nidos grandes y elaborados. Utilizan ramas, hierbas y otros materiales para crear estructuras sólidas y resistentes.\n' +
+                            '\n' +
+                            '5. **Aptitud para el vuelo acrobático:** Son aves muy ágiles y pueden realizar vuelos acrobáticos impresionantes, lo que las hace difíciles de atrapar para los depredadores.\n' +
+                            '\n' +
+                            '6. **Alimentación omnívora:** Las urracas son omnívoras y su dieta incluye una amplia variedad de alimentos, como insectos, frutas, bayas, huevos de otras aves, pequeños mamíferos y carroña.\n' +
+                            '\n' +
+                            '7. **Habilidad para imitar sonidos:** Al igual que otros miembros de la familia Corvidae, las urracas son capaces de imitar una variedad de sonidos, incluyendo llamadas de otras aves e incluso sonidos humanos.\n' +
+                            '\n' +
+                            '8. **Inteligencia destacada:** Se ha demostrado que las urracas son aves excepcionalmente inteligentes. Son capaces de resolver problemas, recordar la ubicación de objetos y aprender tareas complicadas.\n' +
+                            '\n' +
+                            '9. **Comportamiento social:** Las urracas suelen vivir en grupos sociales llamados "bandadas" o "tropas". Estos grupos les proporcionan protección y oportunidades de caza conjunta.\n' +
+                            '\n' +
+                            '10. **Comportamiento oportunista:** Las urracas son oportunistas y a menudo roban objetos brillantes y pequeños, como joyas o utensilios brillantes, que encuentran en áreas humanas. Este comportamiento les ha valido una reputación de "ladronas" en algunas culturas.',
+                            rendered: '<p>Las urracas son aves inteligentes y curiosas que pertenecen a la familia Corvidae. Aquí tienes 10 curiosidades sobre estas fascinantes aves:</p>\n' +
+                            '<p>1. **Distribución global:** Las urracas se encuentran en varias partes del mundo, incluyendo Europa, Asia, África y América del Norte.</p>\n' +
+                            '<p>2. **Variedad de especies:** Existen numerosas especies de urracas en todo el mundo, algunas de las más conocidas son la urraca común (Pica pica) en Europa y la urraca de cola amarilla (Pica nuttalli) en América del Norte.</p>\n' +
+                            '<p>3. **Plumaje llamativo:** La urraca común es conocida por su plumaje llamativo, que combina el negro con el blanco y tonos azules y verdes iridiscentes en las alas.</p>\n' +
+                            '<p>4. **Nidos elaborados:** Las urracas son famosas por construir nidos grandes y elaborados. Utilizan ramas, hierbas y otros materiales para crear estructuras sólidas y resistentes.</p>\n' +
+                            '<p>5. **Aptitud para el vuelo acrobático:** Son aves muy ágiles y pueden realizar vuelos acrobáticos impresionantes, lo que las hace difíciles de atrapar para los depredadores.</p>\n' +
+                            '<p>6. **Alimentación omnívora:** Las urracas son omnívoras y su dieta incluye una amplia variedad de alimentos, como insectos, frutas, bayas, huevos de otras aves, pequeños mamíferos y carroña.</p>\n' +
+                            '<p>7. **Habilidad para imitar sonidos:** Al igual que otros miembros de la familia Corvidae, las urracas son capaces de imitar una variedad de sonidos, incluyendo llamadas de otras aves e incluso sonidos humanos.</p>\n' +
+                            '<p>8. **Inteligencia destacada:** Se ha demostrado que las urracas son aves excepcionalmente inteligentes. Son capaces de resolver problemas, recordar la ubicación de objetos y aprender tareas complicadas.</p>\n' +
+                            '<p>9. **Comportamiento social:** Las urracas suelen vivir en grupos sociales llamados «bandadas» o «tropas». Estos grupos les proporcionan protección y oportunidades de caza conjunta.</p>\n' +
+                            '<p>10. **Comportamiento oportunista:** Las urracas son oportunistas y a menudo roban objetos brillantes y pequeños, como joyas o utensilios brillantes, que encuentran en áreas humanas. Este comportamiento les ha valido una reputación de «ladronas» en algunas culturas.</p>\n',
+                            protected: false,
+                            block_version: 0
+                        },
+                        excerpt: {
+                            raw: '',
+                            rendered: '<p>Las urracas son aves inteligentes y curiosas que pertenecen a la familia Corvidae. Aquí tienes 10 curiosidades sobre estas fascinantes aves: 1. **Distribución global:** Las urracas se encuentran en varias partes del mundo, incluyendo Europa, Asia, África y América del Norte. 2. **Variedad de especies:** Existen numerosas especies de urracas en todo el mundo, algunas [&hellip;]</p>\n',
+                            protected: false
+                        },
+                        author: 2,
+                        featured_media: 0,
+                        comment_status: 'open',
+                        ping_status: 'open',
+                        sticky: false,
+                        template: '',
+                        format: 'standard',
+                        meta: { footnotes: '' },
+                        categories: [ 1 ],
+                        tags: [],
+                        permalink_template: 'http://localhost/wordpress/2023/09/02/%postname%/',
+                        generated_slug: 'curiosidades-sobre-las-urracas',
+                        _links: {
+                            self: [ [Object] ],
+                            collection: [ [Object] ],
+                            about: [ [Object] ],
+                            author: [ [Object] ],
+                            replies: [ [Object] ],
+                            'version-history': [ [Object] ],
+                            'wp:attachment': [ [Object] ],
+                            'wp:term': [ [Object], [Object] ],
+                            'wp:action-publish': [ [Object] ],
+                            'wp:action-assign-categories': [ [Object] ],
+                            'wp:action-create-tags': [ [Object] ],
+                            'wp:action-assign-tags': [ [Object] ],
+                            curies: [ [Object] ]
+                        }
+                        }
+                    </pre>
+                    <script src="script.js"></script>
+                    <img src="02.png" alt="código con el post a publicar" border="3" >
+                
+                <h4>3. Comprobamos en nuestro sitio de WordPress que el post ha sido publicado:</h4>
+                    <img src="03.png" alt="post publicado" border="3" width="50%">
+                    <img src="04.png" alt="contenido del post" border="3" width="50%">
+
+    </main>
+</body>
+</html>

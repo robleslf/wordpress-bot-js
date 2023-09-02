@@ -1,0 +1,46 @@
+pre {
+    background-color: salmon; /* Fondo de color salmón */
+    border: 1px solid darkred; /* Borde de 1 píxel de color oscuro (darkred) */
+    padding: 10px; /* Espacio interno alrededor del contenido del bloque */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* Sombra */
+    overflow: auto; /* Agrega barras de desplazamiento si el contenido es demasiado largo */
+    white-space: pre-wrap; /* Conserva los saltos de línea y espacios en blanco */
+    font-family: monospace; /* Fuente de texto monoespaciada para el código */
+  }
+
+/* Estilo para títulos h1 */
+h1 {
+    color: darkred; /* Color del texto oscuro */
+    font-size: 2em; /* Tamaño de fuente más grande */
+    margin-bottom: 20px; /* Espacio inferior entre el título y otros elementos */
+  }
+  
+  /* Estilo para títulos h2 */
+  h2 {
+    color: darkred; /* Color del texto oscuro */
+    font-size: 1.5em; /* Tamaño de fuente un poco más grande */
+    margin-top: 20px; /* Espacio superior entre el título y otros elementos */
+    margin-bottom: 10px; /* Espacio inferior más pequeño */
+  }
+
+  /* Estilo para el fondo de la página con un degradado */
+body {
+    background: linear-gradient(135deg,  #f7bbb1, #ff7f50); /* Cambia los colores según tu preferencia */
+    font-family: Arial, sans-serif; /* Cambia la fuente según tu preferencia */
+    color: #333; /* Color de texto principal */
+    margin: 0; /* Elimina el margen predeterminado del cuerpo */
+    padding: 0; /* Elimina el relleno predeterminado del cuerpo */
+  }
+
+  .pre-collapsed {
+    max-height: 100px; /* Altura máxima cuando está contraído */
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.pre-expanded {
+    max-height: none;
+    overflow: auto;
+    cursor: pointer;
+}
+
